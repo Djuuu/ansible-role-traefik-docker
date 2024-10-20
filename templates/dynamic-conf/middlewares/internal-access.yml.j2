@@ -1,0 +1,15 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+http:
+  middlewares:
+
+    internal-access:
+      IPAllowList:
+        sourceRange:
+          - "127.0.0.1/32" # localhost
+
+          {% for item in traefik_internal_networks %}
+          - "{{ item.net | default(item) }}"  # {{ item.comment | default('') }}
+          {% endfor %}

@@ -1,0 +1,26 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+tls:
+
+  {% if traefik_cert_base_src and traefik_cert_domains | length > 0 %}
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/{{ traefik_cert_domains[0] }}/fullchain.pem
+        keyFile: /etc/traefik/certs/{{ traefik_cert_domains[0] }}/privkey.pem
+
+  certificates:
+
+    {% for item in traefik_cert_domains %}
+    - certFile: /etc/traefik/certs/{{ item }}/fullchain.pem
+      keyFile: /etc/traefik/certs/{{ item }}/privkey.pem
+
+    {% endfor %}
+  {% else %}
+  stores:
+    default: {}
+
+  certificates: []
+  {% endif %}

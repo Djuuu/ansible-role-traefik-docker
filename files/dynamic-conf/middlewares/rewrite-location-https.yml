@@ -1,0 +1,24 @@
+# This middleware rewrites 'Location' headers, forcing the https scheme.
+# It can be useful with downstream services that don't properly handle 'X-Forwarded-Proto'.
+#
+# It requires the "Rewrite Header" plugin.
+# https://plugins.traefik.io/plugins/628c9eb5108ecc83915d7758/rewrite-header
+# https://github.com/XciD/traefik-plugin-rewrite-headers
+#
+# Add it to the `traefik_plugins` var:
+# ```yaml
+#   - key:        "traefik-plugin-rewrite-headers"
+#     modulename: "github.com/XciD/traefik-plugin-rewrite-headers"
+#     version:    "v0.0.4"
+# ```
+
+http:
+  middlewares:
+
+    rewrite-location-https:
+      plugin:
+        traefik-plugin-rewrite-headers:
+          rewrites:
+            - header: Location
+              regex: ^http://(.+)$
+              replacement: https://$1

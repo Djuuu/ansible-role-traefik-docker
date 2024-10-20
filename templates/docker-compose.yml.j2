@@ -1,0 +1,133 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+name: {{ project_name }}
+
+services:
+
+  traefik:
+    container_name: {{ project_name }}
+    image: traefik:{{ traefik_version }}
+    restart: {{ traefik_service_restart }}
+
+    {% if traefik_network_mode == 'host' %}
+    network_mode: host
+    {% else %}
+    ports:
+      - "80:80"
+      - "443:443"
+    {% endif %}
+
+    {{ compose_service_additional_options | default('') | indent(4) }}
+
+    environment:
+      # Allow x509 negative serial numbers
+      # https://github.com/golang/go/commit/db13584baedce4909915cb4631555f6dbd7b8c38#diff-653c27e509712ba21a5538e1404dbcb17e1c8e96eff8353e404f98f61601d6b6R189
+      GODEBUG: "x509negativeserial=1"
+
+    command:
+      # Base configuration
+      - --api.dashboard=true
+      - --log.level=INFO
+      - --accesslog=true
+      - --serverstransport.insecureskipverify=true # Disable SSL certificate verification
+
+      # Entrypoints - web
+      - --entrypoints.http.address=:80
+      - --entrypoints.http.forwardedheaders.insecure=true # trust X-Forwarded-* headers (TODO: use trusted IPs?)
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.forwardedheaders.insecure=true # trust X-Forwarded-* headers (TODO: use trusted IPs?)
+      - --entrypoints.https.http.tls=true # enable TLS at entrypoint level
+
+      # Docker provider
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      {% if traefik_network_mode != 'host' %}
+      - --providers.docker.network=traefik_default
+      {% endif %}
+      - --providers.docker.defaultRule=
+           Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label }}") .ContainerName {{ '}}' }}.{{ local_base_domain }}`)
+        {% if exposed_base_domain is defined %}
+        || Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label }}") .ContainerName {{ '}}' }}.{{ exposed_base_domain }}`)
+        {% endif %}
+
+      # File provider
+      - --providers.file.directory=/etc/traefik/dynamic-conf
+      #- --providers.file.watch=true
+
+      # Logs
+      - --log.filePath=/var/log/traefik/traefik.log
+
+      # Certificates resolvers
+      - --certificatesresolvers.letsencrypt=false # TODO
+
+      # Plugins
+      {% for item in traefik_plugins | default([]) %}
+      - --experimental.plugins.{{ item.key }}.modulename={{ item.modulename }}
+      - --experimental.plugins.{{ item.key }}.version={{ item.version }}
+      {% endfor %}
+
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false
+
+      # Traefik dynamic configuration
+      - type: bind
+        source: ./dynamic-conf
+        target: /etc/traefik/dynamic-conf
+        bind:
+          create_host_path: true
+
+      # Basic auth users
+      - type: bind
+        source: ./users.htpasswd
+        target: /etc/traefik/users.htpasswd
+        read_only: true
+
+      # Logs
+      - type: bind
+        source: {{ traefik_logs_path }}
+        target: /var/log/traefik
+        bind:
+          create_host_path: true
+
+      {% if traefik_cert_base_src %}
+      # Certificates
+      {% for item in traefik_cert_domains %}
+      - type: bind
+        source: {{ traefik_cert_base_src }}/{{ item }}/fullchain.pem
+        target: {{ cert_base_dest | default('/etc/traefik/certs') }}/{{ item }}/fullchain.pem
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: {{ traefik_cert_base_src }}/{{ item }}/privkey.pem
+        target: {{ cert_base_dest | default('/etc/traefik/certs') }}/{{ item }}/privkey.pem
+        read_only: true
+        bind:
+          create_host_path: false
+      {% endfor %}
+      {% endif %}
+
+    labels:
+      {{ traefik_project_base_labels | indent(6) }}
+
+      # https://github.com/traefik/traefik/issues/5732
+      traefik.http.services.dummyService.loadbalancer.server.port: 1664
+
+      # What's up Docker? - https://github.com/fmartinou/whats-up-docker
+      wud.tag.include: ^\d+\.\d+$$
+      wud.watch.digest: true
+
+{% if traefik_network_mode != 'host' %}
+networks:
+  {{ traefik_project_default_network | indent(2) }}
+{% endif %}
+
+{{ compose_additional_options | default('') }}

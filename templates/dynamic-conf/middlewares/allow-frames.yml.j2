@@ -1,0 +1,14 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+http:
+  middlewares:
+
+    allow-frames:
+      headers:
+        customFrameOptionsValue: >-
+          ALLOW-FROM 
+          {% for item in access_control_allow_origin_dashboards | default([]) %}
+          {{ item }} 
+          {% endfor %}

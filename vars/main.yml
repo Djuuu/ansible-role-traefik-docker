@@ -1,0 +1,11 @@
+---
+
+project_name: "{{ traefik_project_name | default('traefik') }}"
+
+project_path: "{{ docker_projects_path }}/{{ project_name }}"
+
+compose_ipv4_subnet: "{{ traefik_compose_ipv4_subnet | default(None) }}"
+compose_ipv6_subnet: "{{ traefik_compose_ipv6_subnet | default(None) }}"
+
+compose_additional_options: "{{ traefik_compose_additional_options | default('') }}"
+compose_service_additional_options: "{{ traefik_compose_service_additional_options | default('') }}"
