@@ -2,9 +2,6 @@
 
 ## Init
 
-- name: Init docker compose project vars
-  ansible.builtin.include_role: { name: djuuu.docker_tasks, tasks_from: init-compose-project-vars }
-
 - name: Ensure project directory exists
   ansible.builtin.file:
     path: "{{ project_path }}"
