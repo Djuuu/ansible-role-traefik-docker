@@ -2,12 +2,12 @@
 # {{ ansible_managed }}
 # {{ template_fullpath }}
 
-name: {{ project_name }}
+name: {{ docker_project_slug }}
 
 services:
 
   traefik:
-    container_name: {{ project_name }}
+    container_name: {{ docker_project_slug }}
     image: traefik:{{ traefik_version }}
     restart: {{ traefik_service_restart }}
 
@@ -19,7 +19,7 @@ services:
       - "443:443"
     {% endif %}
 
-    {{ compose_service_additional_options | default('') | indent(4) }}
+    {{ docker_project_compose_service_additional_options | indent(4) }}
 
     environment:
       # Allow x509 negative serial numbers
@@ -35,10 +35,10 @@ services:
 
       # Entrypoints - web
       - --entrypoints.http.address=:80
-      - --entrypoints.http.forwardedheaders.insecure=true # trust X-Forwarded-* headers (TODO: use trusted IPs?)
       - --entrypoints.https.address=:443
-      - --entrypoints.https.forwardedheaders.insecure=true # trust X-Forwarded-* headers (TODO: use trusted IPs?)
       - --entrypoints.https.http.tls=true # enable TLS at entrypoint level
+      #- --entrypoints.http.forwardedheaders.insecure=true # trust X-Forwarded-* headers
+      #- --entrypoints.https.forwardedheaders.insecure=true # trust X-Forwarded-* headers
 
       # Docker provider
       - --providers.docker=true
@@ -48,9 +48,9 @@ services:
       - --providers.docker.network=traefik_default
       {% endif %}
       - --providers.docker.defaultRule=
-           Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label }}") .ContainerName {{ '}}' }}.{{ local_base_domain }}`)
+           Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label_key }}") .ContainerName {{ '}}' }}.{{ local_base_domain }}`)
         {% if exposed_base_domain is defined %}
-        || Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label }}") .ContainerName {{ '}}' }}.{{ exposed_base_domain }}`)
+        || Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label_key }}") .ContainerName {{ '}}' }}.{{ exposed_base_domain }}`)
         {% endif %}
 
       # File provider
@@ -76,27 +76,12 @@ services:
         target: /var/run/docker.sock
         bind:
           create_host_path: false
-
       # Traefik dynamic configuration
-      - type: bind
-        source: ./dynamic-conf
-        target: /etc/traefik/dynamic-conf
-        bind:
-          create_host_path: true
-
+      - ./dynamic-conf:/etc/traefik/dynamic-conf
       # Basic auth users
-      - type: bind
-        source: ./users.htpasswd
-        target: /etc/traefik/users.htpasswd
-        read_only: true
-
+      - ./users.htpasswd:/etc/traefik/users.htpasswd:ro
       # Logs
-      - type: bind
-        source: {{ traefik_logs_path }}
-        target: /var/log/traefik
-        bind:
-          create_host_path: true
-
+      - {{ traefik_logs_path }}:/var/log/traefik
       {% if traefik_cert_base_src %}
       # Certificates
       {% for item in traefik_cert_domains %}
@@ -116,18 +101,19 @@ services:
       {% endif %}
 
     labels:
-      {{ traefik_project_base_labels | indent(6) }}
-
       # https://github.com/traefik/traefik/issues/5732
+      # https://github.com/traefik/traefik/issues/7821
       traefik.http.services.dummyService.loadbalancer.server.port: 1664
 
-      # What's up Docker? - https://github.com/fmartinou/whats-up-docker
+      {{ traefik_project_base_labels | indent(6) }}
+
+      # What's up Docker? - https://github.com/getwud/wud
       wud.tag.include: ^\d+\.\d+$$
       wud.watch.digest: true
 
 {% if traefik_network_mode != 'host' %}
 networks:
-  {{ traefik_project_default_network | indent(2) }}
+  {{ docker_project_default_network | indent(2) }}
 {% endif %}
 
-{{ compose_additional_options | default('') }}
+{{ docker_project_compose_additional_options }}

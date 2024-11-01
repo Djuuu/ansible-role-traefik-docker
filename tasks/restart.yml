@@ -1,4 +1,4 @@
 ---
 
 - name: Restart
-  ansible.builtin.include_role: { name: djuuu.docker_tasks, tasks_from: compose-restart }
+  ansible.builtin.include_role: { name: djuuu.docker_project, tasks_from: compose-restart }

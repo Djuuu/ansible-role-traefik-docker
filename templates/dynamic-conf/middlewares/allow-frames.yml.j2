@@ -9,6 +9,6 @@ http:
       headers:
         customFrameOptionsValue: >-
           ALLOW-FROM 
-          {% for item in access_control_allow_origin_dashboards | default([]) %}
+          {% for item in docker_project_allowed_origins | default([]) %}
           {{ item }} 
           {% endfor %}
