@@ -20,6 +20,10 @@ traefik_version: 3.2
 traefik_service_restart: always
 traefik_network_mode:    host
 
+# Other app networks when running in bridge network mode
+traefik_compose_additional_networks: []
+#  - example_default
+
 traefik_logs_path: "{{ docker_project_path }}/logs"
 
 traefik_cert_base_src:   # ex: /etc/letsencrypt/live

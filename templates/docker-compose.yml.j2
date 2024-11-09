@@ -17,6 +17,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+
+    networks:
+      - default
+      {% for item in traefik_compose_additional_networks %}
+      - {{ item }}
+      {% endfor %}
     {% endif %}
 
     {{ docker_project_compose_service_additional_options | indent(4) }}
@@ -114,6 +120,10 @@ services:
 {% if traefik_network_mode != 'host' %}
 networks:
   {{ docker_project_default_network | indent(2) }}
+  {% for item in traefik_compose_additional_networks %}
+  {{ item }}:
+    external: true
+  {% endfor %}
 {% endif %}
 
 {{ docker_project_compose_additional_options }}
