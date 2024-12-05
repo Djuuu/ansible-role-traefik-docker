@@ -17,7 +17,7 @@ traefik_traefik_middlewares:
 
 traefik_version: 3.2
 
-traefik_service_restart: always
+traefik_service_restart: unless-stopped
 traefik_network_mode:    host
 
 # Other app networks when running in bridge network mode
