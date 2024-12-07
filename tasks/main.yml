@@ -58,6 +58,7 @@
   loop:
     - dynamic-conf/default-cert.yml
     - dynamic-conf/middlewares/allow-frames.yml
+    - dynamic-conf/middlewares/csp-add-frame-ancestors.yml
     - dynamic-conf/middlewares/internal-access.yml
   notify: Restart traefik
 

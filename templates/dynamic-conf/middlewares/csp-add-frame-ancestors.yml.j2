@@ -1,0 +1,50 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+# This middleware adds items from the `docker_project_allowed_origins` var (see djuuu.docker_project)
+# to the frame-ancestors CSP directive. It requires the following plugins:
+#
+# - "Rewrite Header" (https://plugins.traefik.io/plugins/628c9eb5108ecc83915d7758/rewrite-header)
+#   Add it to the `traefik_plugins` var:
+#   ```yaml
+#     - key:        "traefik-plugin-rewrite-headers"
+#       modulename: "github.com/XciD/traefik-plugin-rewrite-headers"
+#       version:    "v0.0.4"
+#   ```
+#
+# - "Add Missing Headers" (https://plugins.traefik.io/plugins/62f3496be2bf06d4675b9445/add-missing-headers)
+#   Add it to the `traefik_plugins` var:
+#   ```yaml
+#     - key:        "AddMissingHeaders"
+#       modulename: "github.com/jerrywoo96/AddMissingHeaders"
+#       version:    "v1.1.1"
+#   ```
+
+http:
+  middlewares:
+
+    csp-add-frame-ancestors:
+      chain:
+        middlewares:
+          - csp-add-frame-ancestors-if-no-csp
+          - csp-add-frame-ancestors-to-existing-csp
+
+    csp-add-frame-ancestors-to-existing-csp:
+      plugin:
+        traefik-plugin-rewrite-headers:
+          rewrites:
+            # Add allowed origins to existing frame-ancestors
+            - header: Content-Security-Policy
+              regex:       frame-ancestors ([^;]*);?
+              replacement: frame-ancestors $1 {{ docker_project_allowed_origins | default([]) | join(' ') }};
+            # Add allowed origins when there is no frame-ancestors clause
+            - header: Content-Security-Policy
+              regex:       ^(([^f]|f[^r]|fr[^a]|fra[^m]|fram[^e]|frame[^-]|frame-[^a]|frame-a[^n]|frame-an[^c]|frame-anc[^e]|frame-ance[^s]|frame-ances[^t]|frame-ancest[^o]|frame-ancesto[^r]|frame-ancestor[^s])*) # no negative lookahead in go :-(
+              replacement: frame-ancestors {{ docker_project_allowed_origins | default([]) | join(' ') }}; $1
+
+    csp-add-frame-ancestors-if-no-csp:
+      plugin:
+        AddMissingHeaders:
+          responseHeaders:
+            Content-Security-Policy: frame-ancestors {{ docker_project_allowed_origins | default([]) | join(' ') }};
