@@ -10,7 +10,6 @@ traefik_traefik_router_service: api@internal
 traefik_traefik_entrypoints: http,https
 traefik_traefik_middlewares:
   - "internal-access@file"
-  - "{{ docker_project_slug }}-cors@docker"
 
 
 # Traefik project variables
