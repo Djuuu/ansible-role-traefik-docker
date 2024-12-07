@@ -7,6 +7,10 @@ http:
 
     allow-frames:
       headers:
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+        # Deprecated: This feature is no longer recommended. Though some browsers might still support it,
+        # it may have already been removed from the relevant web standards, may be in the process of being
+        # dropped, or may only be kept for compatibility purposes.
         customFrameOptionsValue: >-
           ALLOW-FROM 
           {% for item in docker_project_allowed_origins | default([]) %}

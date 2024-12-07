@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+# {{ template_fullpath }}
+
+http:
+  middlewares:
+
+    csp-frame-ancestors:
+      headers:
+        contentSecurityPolicy: >-
+          frame-ancestors {{ docker_project_allowed_origins | default([]) | join(' ') }};
