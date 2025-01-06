@@ -4,7 +4,7 @@
 
 traefik_project_name: traefik
 
-# Docker project dynamic vars (uses `docker_project_name` prefix, adapt if overriden)
+# Docker project dynamic vars (uses `docker_project_name` prefix, adapt if overridden)
 
 traefik_traefik_router_service: api@internal
 traefik_traefik_entrypoints: http,https
