@@ -57,6 +57,8 @@ traefik_cert_domains: [] # ex: [ my-domain.net, other-domain.net ]
 # see: djuuu.docker_project - tasks/_init-vars.yml
 traefik_subdomain_label_key: "traefik.subdomain"
 
+traefik_cli_arguments: []
+
 traefik_plugins: []
 
 # Networks allowed through the 'internal-access@file' middleware (CIDR)

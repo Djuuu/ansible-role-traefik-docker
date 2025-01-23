@@ -69,6 +69,11 @@ services:
       # Certificates resolvers
       - --certificatesresolvers.letsencrypt=false # TODO
 
+      # Additional arguments
+      {% for item in traefik_cli_arguments | default([]) %}
+      - {{ item }}
+      {% endfor %}
+
       # Plugins
       {% for item in traefik_plugins | default([]) %}
       - --experimental.plugins.{{ item.key }}.modulename={{ item.modulename }}
