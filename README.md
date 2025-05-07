@@ -38,7 +38,7 @@ traefik_traefik_middlewares:
 
 # Traefik project variables
 
-traefik_version: 3.2
+traefik_version: 3.4
 
 traefik_service_restart: unless-stopped
 traefik_network_mode:    host
