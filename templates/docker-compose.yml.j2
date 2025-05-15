@@ -7,25 +7,17 @@ name: {{ docker_project_slug }}
 services:
 
   traefik:
-    container_name: {{ docker_project_slug }}
     image: traefik:{{ traefik_version }}
-    restart: {{ traefik_service_restart }}
-
-    {% if traefik_network_mode == 'host' %}
-    network_mode: host
-    {% else %}
+    container_name: {{ docker_project_slug }}
+    restart: {{ docker_project_restart }}
+    {{ docker_project_service_network_options | indent(4) }}
+    {% if docker_project_network_mode == 'bridge' %}
     ports:
       - "80:80"
       - "443:443"
-
-    networks:
-      - default
-      {% for item in traefik_compose_additional_networks %}
-      - {{ item }}
-      {% endfor %}
     {% endif %}
 
-    {{ docker_project_compose_service_additional_options | indent(4) }}
+    {{ docker_project_service_additional_options | indent(4) }}
 
     environment:
       # Allow x509 negative serial numbers
@@ -50,7 +42,7 @@ services:
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedbydefault=false
-      {% if traefik_network_mode != 'host' %}
+      {% if docker_project_network_mode == 'bridge' %}
       - --providers.docker.network=traefik_default
       {% endif %}
       - --providers.docker.defaultRule=
@@ -122,13 +114,6 @@ services:
       wud.tag.include: ^\d+\.\d+$$
       wud.watch.digest: true
 
-{% if traefik_network_mode != 'host' %}
-networks:
-  {{ docker_project_default_network | indent(2) }}
-  {% for item in traefik_compose_additional_networks %}
-  {{ item }}:
-    external: true
-  {% endfor %}
-{% endif %}
+{{ docker_project_networks }}
 
 {{ docker_project_compose_additional_options }}

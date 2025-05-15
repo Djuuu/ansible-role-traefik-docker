@@ -30,6 +30,15 @@ Available role variables are listed below, along with default values (see `defau
 
 traefik_project_name: traefik
 
+# Docker project dynamic vars (uses `docker_project_name` prefix, adapt if overridden)
+
+# Project network mode
+traefik_network_mode: bridge
+
+# Additional external docker-compose networks, joined by main service
+traefik_additional_networks: []
+#  - example_default
+
 traefik_traefik_router_service: api@internal
 traefik_traefik_entrypoints: http,https
 traefik_traefik_middlewares:
@@ -39,13 +48,6 @@ traefik_traefik_middlewares:
 # Traefik project variables
 
 traefik_version: 3.4
-
-traefik_service_restart: unless-stopped
-traefik_network_mode:    host
-
-# Other app networks when running in bridge network mode
-traefik_compose_additional_networks: []
-#  - example_default
 
 traefik_logs_path: "{{ docker_project_path }}/logs"
 
