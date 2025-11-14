@@ -47,7 +47,7 @@ traefik_traefik_middlewares:
 
 # Traefik project variables
 
-traefik_version: 3.4
+traefik_version: 3.6
 
 traefik_logs_path: "{{ docker_project_path }}/logs"
 
