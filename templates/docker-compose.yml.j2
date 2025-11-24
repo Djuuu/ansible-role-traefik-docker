@@ -47,7 +47,7 @@ services:
       {% endif %}
       - --providers.docker.defaultRule=
            Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label_key }}") .ContainerName {{ '}}' }}.{{ local_base_domain }}`)
-        {% if exposed_base_domain is defined %}
+        {% if exposed_base_domain is truthy %}
         || Host(`{{ '{{' }} or (index .Labels "{{ traefik_subdomain_label_key }}") .ContainerName {{ '}}' }}.{{ exposed_base_domain }}`)
         {% endif %}
 
